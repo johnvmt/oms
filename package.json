@@ -1,0 +1,25 @@
+{
+  "name": "oms",
+  "version": "0.0.1",
+  "description": "Object Management System for Node.js, incorporating object actions (functions), permissions and versions; uses MongoDB",
+  "private": true,
+  "author": {
+    "name": "John Murphy-Teixidor",
+    "email": "johnvmt@gmail.com"
+  },
+  "devDependencies": {
+    "mocha": "2.2.x"
+  },
+  "dependencies": {
+    "mongodb": "2.0.x",
+    "jsondiffpatch": "0.1.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/johnvmt/node-oms"
+  },
+  "scripts": {
+    "test": "mocha test"
+  },
+  "main": "module.js"
+}
