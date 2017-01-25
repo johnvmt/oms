@@ -1,6 +1,6 @@
 {
   "name": "oms",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Object Management System for Node.js, incorporating object actions (functions), permissions and versions; uses MongoDB",
   "private": true,
   "author": {
