@@ -1,4 +1,4 @@
-var QueueEmitter = require('../../queue-emitter');
+var QueueEmitter = require('queue-emitter');
 
 function Oms(collection) {
 	this.collection = collection;
