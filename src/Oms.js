@@ -17,7 +17,7 @@ Oms.prototype._replicateCollectionFunctions = function() {
 		if(typeof oms[functionName] == 'undefined' && excludeFunctions.indexOf(functionName) < 0) { // safety check, don't override own functions
 			// set own public function to match collection's function
 			oms[functionName] = function () {
-				oms.collectionFunction(functionName, Array.prototype.slice.call(arguments));
+				oms._collectionFunction(functionName, Array.prototype.slice.call(arguments));
 			}
 		}
 	});
