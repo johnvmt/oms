@@ -14,7 +14,7 @@
 	"mongolocal": "0.0.x"
   },
   "dependencies": {
-    "wolfy87-eventemitter": "5.1.x"
+    "queue-emitter": "https://github.com/johnvmt/queue-emitter.git"
   },
   "repository": {
     "type": "git",
