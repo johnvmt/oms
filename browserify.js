@@ -1,25 +1,30 @@
 // Runs from npm install
+
+
 var path = require('path');
 var fs = require('fs');
 var browserify = require('browserify');
 
-var pkgConfig = require(path.join(__dirname, 'package.json'));
+var inFiles = require(path.join(__dirname, 'exports.json'));
 
-var packageName = pkgConfig.name.replace(/[^a-z0-9]+/gi, '').toLowerCase(); // remove non-alphanumeric characters, convert to lowercase
-var inFile = pkgConfig.main;
-var outFile = packageName + '.min.js';
-var standalone = packageName;
-var mapFile = standalone + '.js.map';
+inFiles.forEach(function(inFile) {
+	var inFilePath = path.join(__dirname, 'src', inFile);
 
-var b = browserify({standalone: standalone, debug: true});
-b.add(inFile);
+	var packageName = inFile.replace(/[^a-z0-9]+/gi, '').toLowerCase(); // remove non-alphanumeric characters, convert to lowercase
+	var outFile = packageName + '.min.js';
+	var standalone = packageName;
+	var mapFile = standalone + '.js.map';
 
-b.plugin('minifyify', {map: mapFile});
+	var b = browserify({standalone: standalone, debug: true});
+	b.add(inFilePath);
 
-b.bundle(function (err, src, map) {
-	fs.writeFileSync(mapFile, map);
-	console.log("Out file: ", getFilesizeInBytes(outFile), "bytes");
-}).pipe(fs.createWriteStream(outFile));
+	b.plugin('minifyify', {map: mapFile});
+
+	b.bundle(function (err, src, map) {
+		fs.writeFileSync(mapFile, map);
+		console.log("Out file: ", getFilesizeInBytes(outFile), "bytes");
+	}).pipe(fs.createWriteStream(outFile));
+});
 
 function getFilesizeInBytes(filename) {
 	var stats = fs.statSync(filename);
