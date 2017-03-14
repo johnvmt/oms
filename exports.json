@@ -1,8 +1,9 @@
 [
+  "OmsIntercept",
+  "OmsLayers",
+  "OmsMongoConnector",
   "OmsOplog",
   "OmsOplogSubscriptions",
-  "OmsMongoConnector",
-  "OmsIntercept",
   "OmsSubscriptions",
-  "OmsLayers"
+  "OmsUtils"
 ]
