@@ -1,7 +1,7 @@
 var OmsSubscriptions = require('./OmsSubscriptions');
 var OmsUtils = require('./OmsUtils');
 
-function OmsOpLogSubscriptions(opLogCollection) {
+function OmsOplogSubscriptions(opLogCollection) {
 	var self = this;
 
 	self.opLogCollection = opLogCollection;
@@ -22,7 +22,7 @@ function OmsOpLogSubscriptions(opLogCollection) {
  * @param opLogQuery
  * @param callback
  */
-OmsOpLogSubscriptions.prototype.subscribeResume = function(lastOpId, collectionQuery, opLogQuery, callback) {
+OmsOplogSubscriptions.prototype.subscribeResume = function(lastOpId, collectionQuery, opLogQuery, callback) {
 	var self = this;
 	self.opLogCollection.findOne({_id: lastOpId}, function(error, lastOp) {
 		if(error)
@@ -65,7 +65,7 @@ OmsOpLogSubscriptions.prototype.subscribeResume = function(lastOpId, collectionQ
  * @param opLogQuery
  * @param collectionQuery
  */
-OmsOpLogSubscriptions.prototype.opLogSubscriptionComputedDoc = function (opLogDoc, opLogQuery, collectionQuery) {
+OmsOplogSubscriptions.prototype.opLogSubscriptionComputedDoc = function (opLogDoc, opLogQuery, collectionQuery) {
 	if(OmsUtils.docMatch(opLogDoc, opLogQuery))
 		return this.operationSubscriptionComputedDoc(opLogDoc, collectionQuery);
 	else
@@ -80,7 +80,7 @@ OmsOpLogSubscriptions.prototype.opLogSubscriptionComputedDoc = function (opLogDo
  * @param opLogQuery
  * @param collectionQuery
  */
-OmsOpLogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLogDoc, collectionQuery) {
+OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLogDoc, collectionQuery) {
 	switch(opLogDoc.type) {
 		case 'insert':
 		case 'remove':
@@ -119,7 +119,7 @@ OmsOpLogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLo
  * @param opLogQuery
  * @param callback
  */
-OmsOpLogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQuery, callback) {
+OmsOplogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQuery, callback) {
 	var self = this;
 	var findComplete = false; // do not trigger subscription until find is complete
 
@@ -153,7 +153,7 @@ OmsOpLogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQ
  * @param opLogQuery
  * @param callback
  */
-OmsOpLogSubscriptions.prototype.subscribe = function(collectionQuery, opLogQuery, callback) {
+OmsOplogSubscriptions.prototype.subscribe = function(collectionQuery, opLogQuery, callback) {
 	var collectionQueryKey = this._queryKey(this._collectionQueries, collectionQuery);
 	this._collectionQueries[collectionQueryKey].usages++;
 
@@ -170,7 +170,7 @@ OmsOpLogSubscriptions.prototype.subscribe = function(collectionQuery, opLogQuery
  * @param opLogDoc
  * @private
  */
-OmsOpLogSubscriptions.prototype._publish = function(opLogDoc) {
+OmsOplogSubscriptions.prototype._publish = function(opLogDoc) {
 	var self = this;
 
 	var collectionQueryResults = {};
@@ -207,7 +207,7 @@ OmsOpLogSubscriptions.prototype._publish = function(opLogDoc) {
  * @param needle
  * @private
  */
-OmsOpLogSubscriptions.prototype._queryKey = function(queriesHaystack, queryNeedle) {
+OmsOplogSubscriptions.prototype._queryKey = function(queriesHaystack, queryNeedle) {
 	var property;
 	for(property in queriesHaystack) { // pull keys before looping through?
 		if (queriesHaystack.hasOwnProperty(property) && this._objectDeepEqual(queriesHaystack[property].query, queryNeedle)) // Found needle
@@ -225,7 +225,7 @@ OmsOpLogSubscriptions.prototype._queryKey = function(queriesHaystack, queryNeedl
  * Remove subscription
  * @param subscriptionId
  */
-OmsOpLogSubscriptions.prototype.unsubscribe = function(subscriptionId) {
+OmsOplogSubscriptions.prototype.unsubscribe = function(subscriptionId) {
 
 	var subscription = this._subscriptions[subscriptionId];
 
@@ -246,7 +246,7 @@ OmsOpLogSubscriptions.prototype.unsubscribe = function(subscriptionId) {
 	}
 };
 
-OmsOpLogSubscriptions.prototype._uniqueId = function() {
+OmsOplogSubscriptions.prototype._uniqueId = function() {
 	function s4() {
 		return Math.floor((1 + Math.random()) * 0x10000)
 			.toString(16)
@@ -256,7 +256,7 @@ OmsOpLogSubscriptions.prototype._uniqueId = function() {
 		s4() + '-' + s4() + s4() + s4();
 };
 
-OmsOpLogSubscriptions.prototype._objectDeepEqual = function (x, y) {
+OmsOplogSubscriptions.prototype._objectDeepEqual = function (x, y) {
 	if ((typeof x == "object" && x != null) && (typeof y == "object" && y != null)) {
 		if (Object.keys(x).length != Object.keys(y).length)
 			return false;
@@ -277,7 +277,7 @@ OmsOpLogSubscriptions.prototype._objectDeepEqual = function (x, y) {
 		return true;
 };
 
-OmsOpLogSubscriptions.prototype._objectForEach = function(object, callback) {
+OmsOplogSubscriptions.prototype._objectForEach = function(object, callback) {
 	// run function on each property (child) of object
 	var property;
 	for(property in object) { // pull keys before looping through?
@@ -287,5 +287,5 @@ OmsOpLogSubscriptions.prototype._objectForEach = function(object, callback) {
 };
 
 module.exports = function(opLogCollection) {
-	return new OmsOpLogSubscriptions(opLogCollection);
+	return new OmsOplogSubscriptions(opLogCollection);
 };

@@ -1,6 +1,6 @@
 [
-  "OmsOpLog",
-  "OmsOpLogSubscriptions",
+  "OmsOplog",
+  "OmsOplogSubscriptions",
   "OmsMongoConnector",
   "OmsIntercept",
   "OmsSubscriptions",

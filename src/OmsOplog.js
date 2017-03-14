@@ -3,7 +3,7 @@ var FunctionUtils = require('./FunctionUtils');
 var OmsUtils = require('./OmsUtils');
 var Utils = require('./Utils');
 
-function OmsOpLog(docCollection, opLogConfig, opTags) {
+function OmsOplog(docCollection, opLogConfig, opTags) {
 	var self = this;
 	self.docCollection = docCollection;
 	self.opLogCollection = MongoLocal(opLogConfig);
@@ -30,7 +30,7 @@ function OmsOpLog(docCollection, opLogConfig, opTags) {
 	});
 }
 
-OmsOpLog.prototype.applyOp = function(operationDoc) {
+OmsOplog.prototype.applyOp = function(operationDoc) {
 	var self = this;
 	if(typeof operationDoc != 'undefined') {
 		var searchId = (typeof operationDoc._id != 'undefined') ? operationDoc._id : operationDoc._srcOpId;
@@ -59,7 +59,7 @@ OmsOpLog.prototype.applyOp = function(operationDoc) {
 	}
 };
 
-OmsOpLog.prototype.opsAfterForEach = function(opId, callback) {
+OmsOplog.prototype.opsAfterForEach = function(opId, callback) {
 	var opLogCollection = this.opLogCollection;
 	var opsList = opLogCollection._docsLinkedList;
 	var listOp = opsList[opId];
@@ -74,5 +74,5 @@ OmsOpLog.prototype.opsAfterForEach = function(opId, callback) {
 };
 
 module.exports = function(docCollection, opLogConfig, opTags) {
-	return new OmsOpLog(docCollection, opLogConfig, opTags);
+	return new OmsOplog(docCollection, opLogConfig, opTags);
 };
