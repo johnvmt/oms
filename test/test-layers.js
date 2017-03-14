@@ -1,4 +1,4 @@
-var OmsLayers = require('./src/OmsLayers');
+var OmsLayers = require('../src/OmsLayers');
 var MongoLocal = require('mongolocal');
 
 var localCollection = MongoLocal();
@@ -18,5 +18,5 @@ localCollection.on('remove', function() {
 	console.log("REMOVE", arguments);
 });
 
-localCollection.insert({key: "val"});
+remoteCollection.insert({key: "val"});
 

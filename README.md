@@ -16,7 +16,6 @@
 		arguments[arguments.length - 1](); // next() function
 	});
 	
-	
 	oms.insert({key: "val"}, function (error, object) {
 		console.log("EO", error, object);
 	});

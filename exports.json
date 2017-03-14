@@ -1,4 +1,6 @@
 [
+  "OmsOpLog",
+  "OmsOpLogSubscriptions",
   "OmsMongoConnector",
   "OmsIntercept",
   "OmsSubscriptions",

@@ -1,4 +1,4 @@
-// Utils module 1.0.6
+// Utils module 1.0.9
 var Utils = {};
 
 Utils.objectFilterProperties = function(object, properties) {
@@ -8,6 +8,27 @@ Utils.objectFilterProperties = function(object, properties) {
 		filtered[property] = object[property];
 	});
 	return filtered;
+};
+
+Utils.objectDeepEqual = function (x, y) {
+	if ((typeof x == "object" && x != null) && (typeof y == "object" && y != null)) {
+		if (Object.keys(x).length != Object.keys(y).length)
+			return false;
+
+		for(var prop in x) {
+			if(y.hasOwnProperty(prop)) {
+				if (! Utils.objectDeepEqual(x[prop], y[prop]))
+					return false;
+			}
+			else
+				return false;
+		}
+		return true;
+	}
+	else if(x !== y)
+		return false;
+	else
+		return true;
 };
 
 Utils.objectContainsObject = function(containerObject, object) {
@@ -114,7 +135,7 @@ Utils.objectSet = function(object, keys, value) {
 	else {
 		if(typeof(object[keys[0]]) === "undefined")
 			object[keys[0]] = {}; // set empty object so we can descend into it
-		return this._objectSet(object[keys[0]], keys.slice(1), value);
+		return this.objectSet(object[keys[0]], keys.slice(1), value);
 	}
 };
 

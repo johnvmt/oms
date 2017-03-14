@@ -5,7 +5,14 @@ MongoClient.connect(url, function(err, db) {
 
 	var collection = db.collection('test');
 
-	var connector = require('./src/OmsMongoConnector')(collection);
+	var cursor = collection.find({}, function(error, cursor) {
+		cursor.forEach(function(doc) {
+			console.log(doc);
+		});
+	});
+
+	/*
+	var connector = require('../src/OmsMongoConnector')(collection);
 
 	connector.on('insert', function() {
 		console.log("INSERT", arguments);
@@ -27,4 +34,5 @@ MongoClient.connect(url, function(err, db) {
 		});
 
 	});
+	*/
 });

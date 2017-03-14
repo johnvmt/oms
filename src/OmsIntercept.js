@@ -1,17 +1,17 @@
 var QueueEmitter = require('queue-emitter');
+var FunctionUtils = require('./FunctionUtils');
 
 function OmsIntercept(collection) {
 	this.collection = collection;
 	this._maxOpId = 0;
-
-	this._replicateCollectionFunctions();
+	this._replicateInterceptCollectionFunctions();
 }
 
 OmsIntercept.prototype.__proto__ = QueueEmitter.prototype;
 
-OmsIntercept.prototype._replicateCollectionFunctions = function() {
+OmsIntercept.prototype._replicateInterceptCollectionFunctions = function() {
 	var omsIntercept = this;
-	var functions = omsIntercept._objectPublicFunctions(this.collection); // get collection's public functions
+	var functions = FunctionUtils.objectPublicFunctions(this.collection); // get collection's public functions
 	var excludeFunctions = ['isCapped'];
 	functions.forEach(function(functionName) {
 		if(typeof omsIntercept[functionName] == 'undefined' && excludeFunctions.indexOf(functionName) < 0) { // safety check, don't override own functions

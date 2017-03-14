@@ -13,7 +13,7 @@
 	"minifyify": "7.3.x"
   },
   "dependencies": {
-	"mongolocal": "1.1.x",
+	"mongolocal": "1.2.x",
 	"fauxmongo": "0.2.x",
 	"wolfy87-eventemitter": "5.1.x",
     "queue-emitter": "https://github.com/johnvmt/queue-emitter.git"

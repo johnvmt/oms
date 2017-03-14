@@ -1,5 +1,5 @@
 var collection = require('mongolocal')();
-var connector = require('./src/OmsMongoConnector')(collection);
+var connector = require('../src/OmsMongoConnector')(collection);
 
 connector.on('insert', function() {
 	console.log("INSERT", arguments);

@@ -3,7 +3,9 @@ var FauxMongo = require('fauxmongo');
 //var MongoLocal = require('mongolocal');
 var OmsIntercept = require('./OmsIntercept');
 var OmsSubscriptions = require('./OmsSubscriptions');
+
 var Utils = require('./Utils');
+var FunctionUtils = require('./FunctionUtils');
 
 // Access a Mongo Collection as Oms Collection
 function OmsMongoConnector(mongoCollection) {
@@ -12,7 +14,7 @@ function OmsMongoConnector(mongoCollection) {
 	this.operationsQueue = [];
 	this.mongoIntercept = OmsIntercept(mongoCollection);
 
-	self._replicateCollectionFunctions();
+	FunctionUtils.objectReplicateFunctions(self.mongoIntercept, self);
 
 	//this.localCollection = MongoLocal();
 
@@ -183,36 +185,6 @@ OmsMongoConnector.prototype.queue = function(callback) {
 
 	if(self.operationsQueue.length == 1)
 		callback(queueNext);
-};
-
-OmsMongoConnector.prototype._replicateCollectionFunctions = function() {
-	var connector = this;
-	var targetObject = this.mongoIntercept;
-	var functions = this._objectPublicFunctions(targetObject); // get collection's public functions
-	var excludeFunctions = [];
-	functions.forEach(function(functionName) {
-		if(typeof connector[functionName] == 'undefined' && excludeFunctions.indexOf(functionName) < 0) { // safety check, don't override own functions
-			// set own public function to match collection's function
-			connector[functionName] = function () {
-				targetObject[functionName].apply(targetObject, Array.prototype.slice.call(arguments));
-			}
-		}
-	});
-};
-
-OmsMongoConnector.prototype._objectPublicFunctions = function(object) {
-	function objFunctions(object) {
-		var functionNames = [];
-		for(var attribute in object) {
-			if(typeof object[attribute] === 'function')
-				functionNames.push(attribute);
-		}
-		return functionNames;
-	}
-
-	return objFunctions(object).filter(function(attribute) {
-		return (attribute[0] !== '_' && attribute !== 'globalFunctions');
-	});
 };
 
 /**
