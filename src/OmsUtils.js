@@ -42,13 +42,8 @@ OmsUtils.operationDoc = function(operationObject) {
  * @param operationType
  * @param operationArgs
  */
-OmsUtils.operationObjectMin = function (operationType, operationArgs) {
-	if(Array.isArray(operationArgs))
-		var operationObject = OmsUtils.operationObject(operationType, operationArgs);
-	else
-		var operationObject = operationArgs;
-
-	switch(operationType) {
+OmsUtils.operationObjectMin = function (operationObject) {
+	switch(operationObject.operation) {
 		case 'insert':
 			return operationObject;
 			break;
