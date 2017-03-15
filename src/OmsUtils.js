@@ -40,10 +40,42 @@ OmsUtils.operationDoc = function(opType, operationObject) {
 
 };
 
+/**
+ *
+ * @param operationType
+ * @param operationArgs
+ */
+OmsUtils.operationObjectMin = function (operationType, operationArgs) {
+	if(Array.isArray(operationArgs))
+		var operationObject = OmsUtils.operationObject(operationType, operationArgs);
+	else
+		var operationObject = operationArgs;
+
+	switch(operationType) {
+		case 'insert':
+			return operationObject;
+			break;
+		case 'remove':
+			return {
+				doc: {_id: operationObject.doc._id},
+				options: operationObject.options
+			};
+			break;
+		case 'update':
+			return {
+				unmodifiedDoc: {_id: operationObject.unmodifiedDoc._id},
+				updateOperation: operationObject.updateOperation,
+				options: operationObject.options
+			};
+			break;
+	}
+};
+
 // Convert emitted event args array into object
 OmsUtils.operationObject = function(operationType, operationArgs) {
 	switch(operationType) {
 		case 'insert':
+		case 'remove':
 			return {
 				doc: operationArgs[0],
 				options: (typeof operationArgs[1] != 'object' && operationArgs[1] == null) ? {} : operationArgs[1]
@@ -55,12 +87,6 @@ OmsUtils.operationObject = function(operationType, operationArgs) {
 				modifiedDoc: operationArgs[1],
 				updateOperation: operationArgs[2],
 				options: (typeof operationArgs[3] != 'object' && operationArgs[3] == null) ? {} : operationArgs[3]
-			};
-			break;
-		case 'remove':
-			return {
-				doc: operationArgs[0],
-				options: (typeof operationArgs[1] != 'object' && operationArgs[1] == null) ? {} : operationArgs[1]
 			};
 			break;
 		default:
