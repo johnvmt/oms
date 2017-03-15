@@ -12,8 +12,8 @@ OmsUtils.docMatch = function(doc, query) {
 	return FauxMongo.matchQuery(doc, query);
 };
 
-OmsUtils.operationFunctionArguments = function(operationType, operationObject) {
-	switch(operationType) {
+OmsUtils.operationFunctionArguments = function(operationObject) {
+	switch(operationObject.operation) {
 		case 'insert':
 			return [operationObject.doc, operationObject.options];
 			break;
@@ -30,14 +30,11 @@ OmsUtils.operationFunctionArguments = function(operationType, operationObject) {
 };
 
 // Return a minimum operationDoc from operation type and operation
-OmsUtils.operationDoc = function(opType, operationObject) {
-
+OmsUtils.operationDoc = function(operationObject) {
 	return {
-		type: opType,
 		date: new Date(),
 		operation: operationObject
 	};
-
 };
 
 /**
@@ -57,12 +54,14 @@ OmsUtils.operationObjectMin = function (operationType, operationArgs) {
 			break;
 		case 'remove':
 			return {
+				operation: operationObject.operation,
 				doc: {_id: operationObject.doc._id},
 				options: operationObject.options
 			};
 			break;
 		case 'update':
 			return {
+				operation: operationObject.operation,
 				unmodifiedDoc: {_id: operationObject.unmodifiedDoc._id},
 				updateOperation: operationObject.updateOperation,
 				options: operationObject.options
@@ -77,12 +76,14 @@ OmsUtils.operationObject = function(operationType, operationArgs) {
 		case 'insert':
 		case 'remove':
 			return {
+				operation: operationType,
 				doc: operationArgs[0],
 				options: (typeof operationArgs[1] != 'object' && operationArgs[1] == null) ? {} : operationArgs[1]
 			};
 			break;
 		case 'update':
 			return {
+				operation: operationType,
 				unmodifiedDoc: operationArgs[0],
 				modifiedDoc: operationArgs[1],
 				updateOperation: operationArgs[2],

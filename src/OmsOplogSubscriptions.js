@@ -81,7 +81,7 @@ OmsOplogSubscriptions.prototype.opLogSubscriptionComputedDoc = function (opLogDo
  * @param collectionQuery
  */
 OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLogDoc, collectionQuery) {
-	switch(opLogDoc.type) {
+	switch(opLogDoc.operation.operation) {
 		case 'insert':
 		case 'remove':
 			if(OmsUtils.docMatch(opLogDoc.operation.doc, collectionQuery)) // Return original opLogDoc
@@ -95,13 +95,13 @@ OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLo
 				return opLogDoc;
 			else if(unmodifiedDocMatch && !modifiedDocMatch) { // send removal
 				var operationObject = OmsUtils.operationObject('remove', [opLogDoc.operation.unmodifiedDoc]);
-				var operationDoc = OmsUtils.operationDoc('remove', operationObject);
+				var operationDoc = OmsUtils.operationDoc(operationObject);
 				operationDoc._srcOpId = opLogDoc._id; // Assign ID of ID which triggered this event
 				return operationDoc;
 			}
 			else if(!unmodifiedDocMatch && modifiedDocMatch) { // send insertion
 				var operationObject = OmsUtils.operationObject('insert', [opLogDoc.operation.modifiedDoc]);
-				var operationDoc = OmsUtils.operationDoc('insert', operationObject);
+				var operationDoc = OmsUtils.operationDoc(operationObject);
 				operationDoc._srcOpId = opLogDoc._id; // Assign ID of ID which triggered this event
 				return operationDoc;
 			}
@@ -133,7 +133,7 @@ OmsOplogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQ
 			collectionDocs.forEach(function(doc) {
 				// 'Insert' each found doc
 				var operationObject = OmsUtils.operationObject('insert', [doc]);
-				var operationDoc = OmsUtils.operationDoc('insert', operationObject);
+				var operationDoc = OmsUtils.operationDoc(operationObject);
 				callback(null, operationDoc);
 			});
 		}

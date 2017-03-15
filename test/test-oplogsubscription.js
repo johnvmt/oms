@@ -43,4 +43,4 @@ collection1.update({}, {key: "val2"});
 collection1.update({}, {key: "val3"});
 
 console.log(collection1.collection);
-console.log(collection2.collection);
+//console.log(collection2.collection);

@@ -21,7 +21,7 @@ function OmsOplog(docCollection, opLogConfig, opTags) {
 				operationDoc._id = (typeof operationDoc._id != 'undefined') ? operationDoc._id : operationDoc._srcOpId;
 			}
 			else {
-				var operationDoc = OmsUtils.operationDoc(opType, operationObject);
+				var operationDoc = OmsUtils.operationDoc(operationObject);
 				operationDoc = Utils.objectMerge(opTags, operationDoc); // Add user-defined tags
 			}
 
@@ -49,13 +49,16 @@ OmsOplog.prototype.applyOp = function(operationDoc) {
 
 	// Op has not previously been applied
 	function applyCollectionOp(operationDoc) {
+
+		console.log("O-DOC", operationDoc);
+
 		// Tag the operation through mongolocal
 		Utils.objectSet(operationDoc.operation, ['options', '_operation'], operationDoc);
 
-		var collectionFunctionArgs = OmsUtils.operationFunctionArguments(operationDoc.type, operationDoc.operation);
+		var collectionFunctionArgs = OmsUtils.operationFunctionArguments(operationDoc.operation);
 
-		if(typeof self.docCollection[operationDoc.type] == 'function')
-			self.docCollection[operationDoc.type].apply(self.docCollection, collectionFunctionArgs);
+		if(typeof self.docCollection[operationDoc.operation.operation] == 'function')
+			self.docCollection[operationDoc.operation.operation].apply(self.docCollection, collectionFunctionArgs);
 	}
 };
 
