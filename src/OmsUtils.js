@@ -39,8 +39,18 @@ OmsUtils.operationDoc = function(operationObject) {
 
 /**
  *
- * @param operationType
- * @param operationArgs
+ * @param operationDoc
+ */
+OmsUtils.operationDocMin = function (operationDoc) {
+	return {
+		_id: operationDoc._id,
+		operation: OmsUtils.operationObjectMin(operationDoc.operation)
+	};
+};
+
+/**
+ *
+ * @param operationObject
  */
 OmsUtils.operationObjectMin = function (operationObject) {
 	switch(operationObject.operation) {
