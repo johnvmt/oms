@@ -19,13 +19,14 @@ function OmsOplog(docCollection, opLogConfig, opTags) {
 			if(typeof operationObject.options == 'object' && typeof operationObject.options._operation != 'undefined') { // op was applied
 				var operationDoc = operationObject.options._operation;
 				operationDoc._id = (typeof operationDoc._id != 'undefined') ? operationDoc._id : operationDoc._srcOpId;
+				if(typeof operationDoc._id != 'undefined') // not a generated operation
+					self.opLogCollection.insert(operationDoc);
 			}
 			else {
 				var operationDoc = OmsUtils.operationDoc(operationObject);
 				operationDoc = Utils.objectMerge(opTags, operationDoc); // Add user-defined tags
+				self.opLogCollection.insert(operationDoc);
 			}
-
-			self.opLogCollection.insert(operationDoc);
 		});
 	});
 }
@@ -41,16 +42,14 @@ OmsOplog.prototype.applyOp = function(operationDoc) {
 					applyCollectionOp(operationDoc);
 			});
 		}
-		else
-			throw new Error('operation_id_undefined');
+		else // generated event (eg: an insert from findSubscribe)
+			applyCollectionOp(operationDoc);
 	}
 	else
 		throw new Error('operation_undefined');
 
 	// Op has not previously been applied
 	function applyCollectionOp(operationDoc) {
-
-		console.log("O-DOC", operationDoc);
 
 		// Tag the operation through mongolocal
 		Utils.objectSet(operationDoc.operation, ['options', '_operation'], operationDoc);
