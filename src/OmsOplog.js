@@ -19,7 +19,7 @@ function OmsOplog(docCollection, opLogConfig, opTags) {
 			if(typeof operationObject.options == 'object' && typeof operationObject.options._operation != 'undefined') { // op was applied
 				var operationDoc = operationObject.options._operation;
 				operationDoc._id = (typeof operationDoc._id != 'undefined') ? operationDoc._id : operationDoc._srcOpId;
-				if(typeof operationDoc._id != 'undefined') // not a generated operation
+				if(typeof operationDoc._id != 'undefined') // Do not insert generated elements
 					self.opLogCollection.insert(operationDoc);
 			}
 			else {
