@@ -62,20 +62,6 @@ OmsOplog.prototype.applyOp = function(operationDoc) {
 	}
 };
 
-OmsOplog.prototype.opsAfterForEach = function(opId, callback) {
-	var opLogCollection = this.opLogCollection;
-	var opsList = opLogCollection._docsLinkedList;
-	var listOp = opsList[opId];
-	if(typeof listOp == 'undefined') // Operation is not in ops collection
-		callback('op_not_found', null);
-	else {
-		while(listOp != null) {
-			opLogCollection.findOne({_id: listOp.data}, callback); // Trigger callback for each subsequent op in list
-			listOp = listOp.next;
-		}
-	}
-};
-
 module.exports = function(docCollection, opLogConfig, opTags) {
 	return new OmsOplog(docCollection, opLogConfig, opTags);
 };
