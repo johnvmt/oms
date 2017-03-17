@@ -283,7 +283,7 @@ OmsOplogSubscriptions.prototype._objectForEach = function(object, callback) {
 
 OmsOplogSubscriptions.prototype._objectMerge = function() {
 	var merged = {};
-	this.objectForEach(arguments, function(argument) {
+	this._objectForEach(arguments, function(argument) {
 		for (var attrname in argument) {
 			if(argument.hasOwnProperty(attrname))
 				merged[attrname] = argument[attrname];
