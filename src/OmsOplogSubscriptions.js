@@ -46,7 +46,6 @@ OmsOplogSubscriptions.prototype.subscribeResume = function(lastOpId, collectionQ
 							var opLogSubscriptionComputedDoc = self.opLogSubscriptionComputedDoc(opLogDoc, opLogQuery, collectionQuery);
 							if (opLogSubscriptionComputedDoc != null)
 								callback(null, opLogSubscriptionComputedDoc);
-
 							listItem = listItem.next;
 							nextOpLogItem();
 						}
@@ -85,7 +84,7 @@ OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLo
 		case 'insert':
 		case 'remove':
 			if(OmsUtils.docMatch(opLogDoc.operation.doc, collectionQuery)) // Return original opLogDoc
-				return opLogDoc;
+				return this._objectMerge(opLogDoc, {src: 'subscription'});
 			break;
 		case 'update':
 			var unmodifiedDocMatch = OmsUtils.docMatch(opLogDoc.operation.unmodifiedDoc, collectionQuery);
@@ -93,17 +92,13 @@ OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLo
 
 			if(unmodifiedDocMatch && modifiedDocMatch) // send original update
 				return opLogDoc;
-			else if(unmodifiedDocMatch && !modifiedDocMatch) { // send removal
-				var operationObject = OmsUtils.operationObject('remove', [opLogDoc.operation.unmodifiedDoc]);
-				var operationDoc = OmsUtils.operationDoc(operationObject);
-				operationDoc._srcOpId = opLogDoc._id; // Assign ID of ID which triggered this event
-				return operationDoc;
-			}
-			else if(!unmodifiedDocMatch && modifiedDocMatch) { // send insertion
-				var operationObject = OmsUtils.operationObject('insert', [opLogDoc.operation.modifiedDoc]);
-				var operationDoc = OmsUtils.operationDoc(operationObject);
-				operationDoc._srcOpId = opLogDoc._id; // Assign ID of ID which triggered this event
-				return operationDoc;
+			else {
+				if(unmodifiedDocMatch && !modifiedDocMatch) // send removal
+					var operationObject = OmsUtils.operationObject('remove', [opLogDoc.operation.unmodifiedDoc]);
+				else if(!unmodifiedDocMatch && modifiedDocMatch) // send insertion
+					var operationObject = OmsUtils.operationObject('insert', [opLogDoc.operation.modifiedDoc]);
+
+				return this._objectMerge(operationDoc, {_srcOpId: opLogDoc._id, src: 'subscription_translated'}); // Assign ID of ID which triggered this event
 			}
 			break;
 		default:
@@ -133,7 +128,7 @@ OmsOplogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQ
 			collectionDocs.forEach(function(doc) {
 				// 'Insert' each found doc
 				var operationObject = OmsUtils.operationObject('insert', [doc]);
-				var operationDoc = OmsUtils.operationDoc(operationObject);
+				var operationDoc = self._objectMerge(OmsUtils.operationDoc(operationObject), {src: 'subscription_setup'});
 				callback(null, operationDoc);
 			});
 		}
@@ -284,6 +279,17 @@ OmsOplogSubscriptions.prototype._objectForEach = function(object, callback) {
 		if (object.hasOwnProperty(property))
 			callback(object[property], property, object);
 	}
+};
+
+OmsOplogSubscriptions.prototype._objectMerge = function() {
+	var merged = {};
+	this.objectForEach(arguments, function(argument) {
+		for (var attrname in argument) {
+			if(argument.hasOwnProperty(attrname))
+				merged[attrname] = argument[attrname];
+		}
+	});
+	return merged;
 };
 
 module.exports = function(opLogCollection) {
