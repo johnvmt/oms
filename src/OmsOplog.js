@@ -16,22 +16,17 @@ function OmsOplog(docCollection, opLogConfig, opTags) {
 	opTypes.forEach(function(opType) {
 		docCollection.on(opType, function() {
 			var operationObject = OmsUtils.operationObject(opType, arguments); // Convert args to op object
+			var operationDoc = OmsUtils.operationDoc(operationObject);
+
 			if(typeof operationObject.options == 'object' && typeof operationObject.options._operation != 'undefined') { // op was applied
-				var operationDoc = operationObject.options._operation;
-
-				if(typeof operationDoc._id == 'undefined' && typeof operationDoc._srcId != 'undefined')
-					operationDoc._id = operationDoc._srcOpId;
-
-				if(typeof operationDoc.src == 'undefined')
-					operationDoc.src = 'applied';
-
-				self.opLogCollection.insert(operationDoc);
+				var srcOperationDoc = operationObject.options._operation; // Get the op that was passed in; don't insert as-is because may be minified
+				if(typeof srcOperationDoc._id == 'undefined' && typeof srcOperationDoc._srcId != 'undefined')
+					operationDoc._id = srcOperationDoc._srcOpId;
+				operationDoc.src = 'applied';
 			}
-			else {
-				var operationDoc = OmsUtils.operationDoc(operationObject);
+			else
 				operationDoc = Utils.objectMerge(opTags, operationDoc, {src: 'local'}); // Add user-defined tags
-				self.opLogCollection.insert(operationDoc);
-			}
+			self.opLogCollection.insert(operationDoc);
 		});
 	});
 }

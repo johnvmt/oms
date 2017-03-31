@@ -215,7 +215,6 @@ OmsOplogSubscriptions.prototype._queryKey = function(queriesHaystack, queryNeedl
 	return queryKey;
 };
 
-
 /**
  * Remove subscription
  * @param subscriptionId
