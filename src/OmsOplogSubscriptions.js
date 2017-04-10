@@ -99,7 +99,7 @@ OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLo
 					var operationObject = OmsUtils.operationObject('insert', [opLogDoc.operation.modifiedDoc]);
 				else // Doesn't match at all
 					return null;
-				
+
 				return this._objectMerge(operationDoc, {_srcOpId: opLogDoc._id, src: 'subscription_translated'}); // Assign ID of ID which triggered this event
 			}
 			break;

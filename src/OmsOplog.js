@@ -20,6 +20,7 @@ function OmsOplog(docCollection, opLogConfig, opTags) {
 
 			if(typeof operationObject.options == 'object' && typeof operationObject.options._operation != 'undefined') { // op was applied
 				var srcOperationDoc = operationObject.options._operation; // Get the op that was passed in; don't insert as-is because may be minified
+				delete operationObject.options._operation; // Delete _operation so it doesn't continue to be passed on
 				if(typeof srcOperationDoc._id == 'undefined' && typeof srcOperationDoc._srcId != 'undefined')
 					operationDoc._id = srcOperationDoc._srcOpId;
 				operationDoc.src = 'applied';
