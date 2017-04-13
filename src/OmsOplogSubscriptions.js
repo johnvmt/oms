@@ -100,6 +100,7 @@ OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLo
 				else // Doesn't match at all
 					return null;
 
+				var operationDoc = OmsUtils.operationDoc(operationObject);
 				return this._objectMerge(operationDoc, {_srcOpId: opLogDoc._id, src: 'subscription_translated'}); // Assign ID of ID which triggered this event
 			}
 			break;
