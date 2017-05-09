@@ -3,9 +3,15 @@ var path = require('path');
 var fs = require('fs');
 var browserify = require('browserify');
 
+// Package sub-modules
 var Oms = require('./src/Oms');
-
 for(var inFile in Oms) {
+	packageFile(inFile);
+}
+
+packageFile('Oms');
+
+function packageFile(inFile) {
 	var inFilePath = path.join('.', 'src', inFile);
 
 	var packageName = inFile.replace(/[^a-z0-9]+/gi, '').toLowerCase(); // remove non-alphanumeric characters, convert to lowercase
