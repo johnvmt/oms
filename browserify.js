@@ -1,5 +1,4 @@
 // Runs from npm install
-var path = require('path');
 var fs = require('fs');
 var browserify = require('browserify');
 
@@ -12,7 +11,7 @@ for(var inFile in Oms) {
 packageFile('Oms');
 
 function packageFile(inFile) {
-	var inFilePath = path.join('.', 'src', inFile);
+	var inFilePath = './src/' + inFile;
 
 	var packageName = inFile.replace(/[^a-z0-9]+/gi, '').toLowerCase(); // remove non-alphanumeric characters, convert to lowercase
 	var outFile = packageName + '.min.js';

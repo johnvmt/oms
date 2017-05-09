@@ -1,17 +1,8 @@
-var exportFiles = [
-	"OmsIntercept",
-	"OmsLayers",
-	"OmsMongoConnector",
-	"OmsOplog",
-	"OmsOplogSubscriptions",
-	"OmsSubscriptions",
-	"OmsUtils",
-	"OmsWeb"
-];
-
-var exportObjects = {};
-exportFiles.forEach(function(exportFile) {
-	exportObjects[exportFile] = require('./' + exportFile);
-});
-
-module.exports = exportObjects;
+module.exports = {
+	OmsIntercept: require('./OmsIntercept'),
+	OmsLayers: require('./OmsLayers'),
+	OmsMongoConnector: require('./OmsMongoConnector'),
+	OmsOplog: require('./OmsOplog'),
+	OmsOplogSubscriptions: require('./OmsOplogSubscriptions'),
+	OmsUtils: require('./OmsUtils')
+};
