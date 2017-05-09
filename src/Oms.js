@@ -1,5 +1,13 @@
-var path = require('path');
-var exportFiles = ('../exports.json');
+var exportFiles = [
+	"OmsIntercept",
+	"OmsLayers",
+	"OmsMongoConnector",
+	"OmsOplog",
+	"OmsOplogSubscriptions",
+	"OmsSubscriptions",
+	"OmsUtils",
+	"OmsWeb"
+];
 
 var exportObjects = {};
 exportFiles.forEach(function(exportFile) {

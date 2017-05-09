@@ -1,13 +1,11 @@
 // Runs from npm install
-
-
 var path = require('path');
 var fs = require('fs');
 var browserify = require('browserify');
 
-var inFiles = require('./exports.json');
+var Oms = require('./src/Oms');
 
-inFiles.forEach(function(inFile) {
+for(var inFile in Oms) {
 	var inFilePath = path.join('.', 'src', inFile);
 
 	var packageName = inFile.replace(/[^a-z0-9]+/gi, '').toLowerCase(); // remove non-alphanumeric characters, convert to lowercase
@@ -22,12 +20,5 @@ inFiles.forEach(function(inFile) {
 
 	b.bundle(function (err, src, map) {
 		fs.writeFileSync(mapFile, map);
-		console.log("Out file: ", getFilesizeInBytes(outFile), "bytes");
 	}).pipe(fs.createWriteStream(outFile));
-});
-
-function getFilesizeInBytes(filename) {
-	var stats = fs.statSync(filename);
-	var fileSizeInBytes = stats["size"];
-	return fileSizeInBytes
 }
