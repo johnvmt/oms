@@ -1,5 +1,5 @@
 var path = require('path');
-var exportFiles = require(path.join(__dirname, '..', 'exports.json'));
+var exportFiles = ('../exports.json');
 
 var exportObjects = {};
 exportFiles.forEach(function(exportFile) {
