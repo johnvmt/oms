@@ -4,5 +4,6 @@ module.exports = {
 	OmsMongoConnector: require('./OmsMongoConnector'),
 	OmsOplog: require('./OmsOplog'),
 	OmsOplogSubscriptions: require('./OmsOplogSubscriptions'),
+	OmsSubscriptions: require('./OmsSubscriptions'),
 	OmsUtils: require('./OmsUtils')
 };
