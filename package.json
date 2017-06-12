@@ -1,6 +1,6 @@
 {
   "name": "oms",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Object Management System for Node.js, incorporating object actions (functions), permissions and versions; uses MongoDB",
   "private": true,
   "author": {
@@ -8,15 +8,14 @@
     "email": "johnvmt@gmail.com"
   },
   "devDependencies": {
-	"mocha": "2.2.x",
-	"browserify": "11.2.x",
+	"browserify": "14.4.x",
 	"minifyify": "7.3.x"
   },
   "dependencies": {
 	"mongolocal": "1.2.x",
 	"fauxmongo": "0.2.x",
 	"wolfy87-eventemitter": "5.1.x",
-    "queue-emitter": "https://github.com/johnvmt/queue-emitter.git"
+    "queue-emitter": "0.0.x"
   },
   "repository": {
     "type": "git",

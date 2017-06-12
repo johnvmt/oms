@@ -20,7 +20,7 @@ OmsSubscriptions.prototype.findSubscribeObject = function() {
 		if(error)
 			callback(error);
 		else
-			callback(error, opLogDoc.type, opLogDoc.operation);
+			callback(error, opLogDoc.operation);
 	});
 };
 
@@ -48,7 +48,7 @@ OmsSubscriptions.prototype.subscribeObject = function() {
 OmsSubscriptions.prototype.findSubscribe = function() {
 	var query = (typeof arguments[0] == 'function') ? {} : arguments[0];
 	var callback = (typeof arguments[0] == 'function') ? arguments[0] : arguments[1];
-	return this.findSubscribeObject(query, function(error, operationObject) {
+	this.findSubscribeObject(query, function(error, operationObject) {
 		if(error)
 			callback(error);
 		else
@@ -64,7 +64,7 @@ OmsSubscriptions.prototype.findSubscribe = function() {
 OmsSubscriptions.prototype.subscribe = function() {
 	var query = (typeof arguments[0] == 'function') ? {} : arguments[0];
 	var callback = (typeof arguments[0] == 'function') ? arguments[0] : arguments[1];
-	return this.subscribeObject(query, function(error, operationObject) {
+	this.subscribeObject(query, function(error, operationObject) {
 		if(error)
 			callback(error);
 		else

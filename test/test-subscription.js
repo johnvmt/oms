@@ -1,39 +1,27 @@
-var OmsOpLogSubscriptions = require('../src/OmsOpLogSubscriptions');
 var OmsOpLog = require('../src/OmsOpLog');
-var OmsSubscriptions = require('../src/OmsSubscriptions')
-var MongoLocal = require('mongolocal');
+var OmsOpLogSubscriptions = require('../src/OmsOpLogSubscriptions');
+var OmsSubscriptions = require('../src/OmsSubscriptions');
 
-var collection1 = MongoLocal();
-
+var collection1 = require('mongolocal')();
 var opLog1 = OmsOpLog(collection1, {
-	max: 4
+	max: 1000
 }, {
 	server: 'dsnyc1'
 });
+
 var opLogSubscriptions1 = OmsOpLogSubscriptions(opLog1);
-var subscriptions1 = OmsSubscriptions(opLogSubscriptions1);
+var omsSubscriptions1 = OmsSubscriptions(opLogSubscriptions1);
 
-//console.log("ID", subscriptionId);
-
-var subscriptionId = subscriptions1.findSubscribeObject({type: "slide"}, function() {
-	//console.log("ARGS", arguments);
+omsSubscriptions1.subscribe({}, function(error, operation, arg2, arg3) {
+	if(error)
+		console.error(error);
+	console.log(operation, arg2, arg3);
 });
 
-for(var ctr = 0; ctr < 10; ctr++) {
-	collection1.insert({type: "slide", object: ctr});
-}
 
-console.log(Object.keys(opLog1.opLogCollection.collection).length);
+collection1.insert({key: "val"});
+collection1.update({}, {key: "val2"});
+collection1.update({}, {key: "val3"});
 
-console.log(opLog1.opLogCollection.collection);
-
-
-/*
-var object = {key: "val-1"};
-collection1.insert(object, function(error, result) {
-	collection.update({_id: object._id}, {key: "val-2"}, function(error, result) {
-		console.log("UPDATE", error, result);
-	});
-	//console.log("INSERT", error, result);
-});
-*/
+//console.log(collection1.collection);
+//console.log(collection2.collection);

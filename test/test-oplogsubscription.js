@@ -7,8 +7,14 @@ var opLog1 = OmsOpLog(collection1, {
 }, {
 	server: 'dsnyc1'
 });
+
 var opLogSubscriptions1 = OmsOpLogSubscriptions(opLog1);
 
+opLogSubscriptions1.findSubscribe({}, {}, function(error, operationDoc) {
+	if(error)
+		console.error(error);
+	console.log(operationDoc);
+});
 
 
 /*

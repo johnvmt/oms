@@ -23,6 +23,9 @@ OmsUtils.operationFunctionArguments = function(operationObject) {
 		case 'remove':
 			return [{_id: operationObject.doc._id}, operationObject.options];
 			break;
+		case 'subscribe':
+			return [operationObject.status, (typeof operationObject.options == 'object' && operationObject.options != null) ? operationObject.options : {}];
+			break;
 		default:
 			throw new Error('undefined_operation_type');
 			break;
@@ -54,9 +57,6 @@ OmsUtils.operationDocMin = function (operationDoc) {
  */
 OmsUtils.operationObjectMin = function (operationObject) {
 	switch(operationObject.operation) {
-		case 'insert':
-			return operationObject;
-			break;
 		case 'remove':
 			return {
 				operation: operationObject.operation,
@@ -71,6 +71,11 @@ OmsUtils.operationObjectMin = function (operationObject) {
 				updateOperation: operationObject.updateOperation,
 				options: operationObject.options
 			};
+			break;
+		case 'insert':
+		case 'subscribe':
+		default:
+			return operationObject;
 			break;
 	}
 };
@@ -92,7 +97,14 @@ OmsUtils.operationObject = function(operationType, operationArgs) {
 				unmodifiedDoc: operationArgs[0],
 				modifiedDoc: operationArgs[1],
 				updateOperation: operationArgs[2],
-				options: (typeof operationArgs[3] != 'object' && operationArgs[3] == null) ? {} : operationArgs[3]
+				options: (typeof operationArgs[3] != 'object' || operationArgs[3] == null) ? {} : operationArgs[3]
+			};
+			break;
+		case 'subscribe':
+			return {
+				operation: operationType,
+				status: operationArgs[0],
+				options: (typeof operationArgs[1] != 'object' || operationArgs[1] == null) ? {} : operationArgs[1]
 			};
 			break;
 		default:

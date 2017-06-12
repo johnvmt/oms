@@ -11,7 +11,7 @@ function OmsOplogSubscriptions(opLogCollection) {
 	self._opLogQueries = {};
 
 	this.opLogCollection.on('insert', function(opLogDoc) {
-		self._publish(opLogDoc)
+		self._publish(opLogDoc);
 	});
 }
 
@@ -121,27 +121,25 @@ OmsOplogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQ
 	var self = this;
 	var findComplete = false; // do not trigger subscription until find is complete
 
-	var subscriptionId = self.subscribe(collectionQuery, opLogQuery, subscribeCallback);
-
 	self.docCollection.find(collectionQuery, function(error, collectionDocs) {
 		if(error)
 			callback(error, null);
 		else {
-			findComplete = true;
+			self.subscribe(collectionQuery, opLogQuery, subscribeCallback);
 			collectionDocs.forEach(function(doc) {
 				// 'Insert' each found doc
 				var operationObject = OmsUtils.operationObject('insert', [doc]);
 				var operationDoc = self._objectMerge(OmsUtils.operationDoc(operationObject), {src: 'subscription_setup'});
 				callback(null, operationDoc);
 			});
+			var operationObject = OmsUtils.operationObject('subscribe', ['find-complete']);
+			callback(null, OmsUtils.operationDoc(operationObject));
 		}
 	});
 
-	return subscriptionId;
 
 	function subscribeCallback() {
-		if(findComplete) // return once find has returned
-			callback.apply(self, Array.prototype.slice.call(arguments));
+		callback.apply(self, Array.prototype.slice.call(arguments));
 	}
 };
 
@@ -158,9 +156,13 @@ OmsOplogSubscriptions.prototype.subscribe = function(collectionQuery, opLogQuery
 	var opLogQueryKey = this._queryKey(this._opLogQueries, opLogQuery);
 	this._opLogQueries[opLogQueryKey].usages++;
 
-	var subscriptionKey = this._uniqueId();
-	this._subscriptions[subscriptionKey] = {collectionQueryKey: collectionQueryKey, opLogQueryKey: opLogQueryKey, callback: callback};
-	return subscriptionKey;
+	var subscriptionId = this._uniqueId();
+	this._subscriptions[subscriptionId] = {collectionQueryKey: collectionQueryKey, opLogQueryKey: opLogQueryKey, callback: callback};
+
+	var operationObject = OmsUtils.operationObject('subscribe', ['subscribed', {subscriptionId: subscriptionId}]);
+	callback(null, OmsUtils.operationDoc(operationObject));
+
+	return subscriptionId;
 };
 
 /**
