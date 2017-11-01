@@ -6,14 +6,89 @@ function OmsOplogSubscriptions(opLogCollection) {
 
 	self.opLogCollection = opLogCollection;
 	self.docCollection = opLogCollection.docCollection;
-	self._subscriptions = {};
+	self._oneSubscriptions = {};
+	self._collectionSubscriptions = {};
 	self._collectionQueries = {};
 	self._opLogQueries = {};
 
-	this.opLogCollection.on('insert', function(opLogDoc) {
+	self.opLogCollection.on('insert', function(opLogDoc) {
 		self._publish(opLogDoc);
 	});
 }
+
+OmsOplogSubscriptions.prototype.subscribeOneResume = function(lastOpId, collectionQuery, opLogQuery, callback) {
+
+	// Get the last op
+	// If it's an insert or an update and the collectionQuery matches the doc, continue with that doc
+	// If it's a delete, then find the next in the opLog that matches
+};
+
+OmsOplogSubscriptions.prototype.findSubscribeOne = function(collectionQuery, opLogQuery, callback) {
+	var self = this;
+	var subscribeFindComplete = false; // Set to true when first
+	var subscriptionId = self._uniqueId();
+	self._oneSubscriptions[subscriptionId] = {};
+	var oneSubscription = self._oneSubscriptions[subscriptionId];
+
+	var operationObject = OmsUtils.operationObject('subscribe', ['subscribed', {subscriptionId: subscriptionId}]);
+	callback(null, OmsUtils.operationDoc(operationObject));
+
+	if(typeof collectionQuery._id == 'string') // Skip a step when _id is specified
+		subscribeDoc(collectionQuery._id);
+	else
+		subscribeWait();
+
+	function subscribeDoc(docId) {
+		var subscriptionId = null;
+		var collectionQueryMerged = self._objectMerge(collectionQuery, {_id: docId});
+
+		self.findSubscribe(collectionQueryMerged, opLogQuery, function(error, operationDoc) {
+			if(error)
+				callback(error);
+			else if(operationDoc.operation.operation == 'subscribe') {
+				if(operationDoc.operation.status == 'subscribed')
+					oneSubscription.collectionSubscription = operationDoc.operation.options.subscriptionId;
+				else if(operationDoc.operation.status == 'find-complete' && !subscribeFindComplete) {
+					subscribeFindComplete = true;
+					callback(null, operationDoc);
+				}
+			}
+			else {
+				callback(null, operationDoc);
+
+				if(operationDoc.operation.operation == 'remove') {
+					self.unsubscribe(subscriptionId, function() {
+						subscribeWait();
+					});
+				}
+			}
+		});
+	}
+
+	function subscribeWait() {
+		var subscriptionId = null;
+		self.findSubscribe(collectionQuery, opLogQuery, function(error, operationDoc) {
+			if(error)
+				callback(error);
+			else if(operationDoc.operation.operation == 'subscribe') {
+
+				if(operationDoc.operation.status == 'subscribed')
+					oneSubscription.collectionSubscription = operationDoc.operation.options.subscriptionId;
+				else if(operationDoc.operation.status == 'find-complete' && !subscribeFindComplete) {
+					subscribeFindComplete = true;
+					callback(null, operationDoc);
+				}
+			}
+			else if(operationDoc.operation.operation == 'insert') {
+				var docId = operationDoc.operation.doc._id;
+				self.unsubscribe(oneSubscription.collectionSubscription, function() {
+					subscribeDoc(docId);
+				});
+			}
+		});
+	}
+};
+
 
 /**
  *
@@ -157,12 +232,63 @@ OmsOplogSubscriptions.prototype.subscribe = function(collectionQuery, opLogQuery
 	this._opLogQueries[opLogQueryKey].usages++;
 
 	var subscriptionId = this._uniqueId();
-	this._subscriptions[subscriptionId] = {collectionQueryKey: collectionQueryKey, opLogQueryKey: opLogQueryKey, callback: callback};
+	this._collectionSubscriptions[subscriptionId] = {collectionQueryKey: collectionQueryKey, opLogQueryKey: opLogQueryKey, callback: callback};
 
 	var operationObject = OmsUtils.operationObject('subscribe', ['subscribed', {subscriptionId: subscriptionId}]);
 	callback(null, OmsUtils.operationDoc(operationObject));
 
 	return subscriptionId;
+};
+
+/**
+ * Remove subscription
+ * @param subscriptionId
+ */
+OmsOplogSubscriptions.prototype.unsubscribe = function(subscriptionId, callback) {
+	if(typeof this._oneSubscriptions[subscriptionId] == 'object') {
+		var subscription = this._oneSubscriptions[subscriptionId];
+
+		if(typeof subscription.collectionSubscription == 'string') {
+			this.unsubscribe(subscription.collectionSubscription, function(error, success) {
+				if(error)
+					callbackSafe(error, null);
+				else {
+					delete this._oneSubscriptions[subscriptionId];
+					callbackSafe(null, true);
+				}
+			});
+		}
+		else {
+			delete this._oneSubscriptions[subscriptionId];
+			callbackSafe(null, true);
+		}
+	}
+	else if(typeof this._collectionSubscriptions[subscriptionId] == 'object') {
+		var subscription = this._collectionSubscriptions[subscriptionId];
+
+		var collectionQueryKey = subscription.collectionQueryKey;
+		var collectionQueryConfig = this._collectionQueries[collectionQueryKey];
+		collectionQueryConfig.usages--;
+		if(collectionQueryConfig.usages <= 0)
+			delete this._collectionQueries[collectionQueryKey];
+
+		var opLogQueryKey = subscription.opLogQueryKey;
+		var opLogQueryConfig = this._opLogQueries[opLogQueryKey];
+		opLogQueryConfig.usages--;
+		if(opLogQueryConfig.usages <= 0)
+			delete this._opLogQueries[opLogQueryKey];
+
+		callbackSafe(null, true);
+	}
+	else {
+		callbackSafe('subscription_not_found', null);
+	}
+
+
+	function callbackSafe(error, response) {
+		if(typeof callback == 'function')
+			callback(error, response);
+	}
 };
 
 /**
@@ -176,25 +302,27 @@ OmsOplogSubscriptions.prototype._publish = function(opLogDoc) {
 	var collectionQueryResults = {};
 	var opLogQueryResults = {};
 
-	this._objectForEach(self._subscriptions, function(subscription, subscriptionKey) {
+	this._objectForEach(self._collectionSubscriptions, function(subscription, subscriptionKey) {
 		var collectionQueryKey = subscription.collectionQueryKey;
-		var collectionQuery = self._collectionQueries[collectionQueryKey].query;
+		if(typeof self._collectionQueries[collectionQueryKey] == 'object') {
+			var collectionQuery = self._collectionQueries[collectionQueryKey].query;
 
-		var opLogQueryKey = subscription.opLogQueryKey;
-		var opLogQuery = self._opLogQueries[opLogQueryKey].query;
+			var opLogQueryKey = subscription.opLogQueryKey;
+			var opLogQuery = self._opLogQueries[opLogQueryKey].query;
 
-		// Store the opLog query result
-		if(typeof opLogQueryResults[opLogQueryKey] != 'boolean')
-			opLogQueryResults[opLogQueryKey] = OmsUtils.docMatch(opLogDoc, opLogQuery);
+			// Store the opLog query result
+			if(typeof opLogQueryResults[opLogQueryKey] != 'boolean')
+				opLogQueryResults[opLogQueryKey] = OmsUtils.docMatch(opLogDoc, opLogQuery);
 
-		// OpLog query matches
-		if(opLogQueryResults[opLogQueryKey]) {
-			// Store the collection query result
-			if(typeof collectionQueryResults[collectionQueryKey] != 'boolean')
-				collectionQueryResults[collectionQueryKey] = self.operationSubscriptionComputedDoc(opLogDoc, collectionQuery);
+			// OpLog query matches
+			if(opLogQueryResults[opLogQueryKey]) {
+				// Store the collection query result
+				if(typeof collectionQueryResults[collectionQueryKey] != 'boolean')
+					collectionQueryResults[collectionQueryKey] = self.operationSubscriptionComputedDoc(opLogDoc, collectionQuery);
 
-			if(collectionQueryResults[collectionQueryKey] != null) // Collection query matched
-				subscription.callback(null, collectionQueryResults[collectionQueryKey]);
+				if(collectionQueryResults[collectionQueryKey] != null) // Collection query matched
+					subscription.callback(null, collectionQueryResults[collectionQueryKey]);
+			}
 		}
 	});
 };
@@ -220,30 +348,7 @@ OmsOplogSubscriptions.prototype._queryKey = function(queriesHaystack, queryNeedl
 	return queryKey;
 };
 
-/**
- * Remove subscription
- * @param subscriptionId
- */
-OmsOplogSubscriptions.prototype.unsubscribe = function(subscriptionId) {
 
-	var subscription = this._subscriptions[subscriptionId];
-
-	if(!subscription)
-		throw new Error('subscription_not_found');
-	else {
-		var collectionQueryKey = subscription.collectionQueryKey;
-		var collectionQueryConfig = this._collectionQueries[collectionQueryKey];
-		collectionQueryConfig.usages--;
-		if(collectionQueryConfig.usages <= 0)
-			delete this._collectionQueries[collectionQueryKey];
-
-		var opLogQueryKey = subscription.opLogQueryKey;
-		var opLogQueryConfig = this._opLogQueries[opLogQueryKey];
-		opLogQueryConfig.usages--;
-		if(opLogQueryConfig.usages <= 0)
-			delete this._opLogQueries[opLogQueryKey];
-	}
-};
 
 OmsOplogSubscriptions.prototype._uniqueId = function() {
 	function s4() {

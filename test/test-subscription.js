@@ -12,10 +12,10 @@ var opLog1 = OmsOpLog(collection1, {
 var opLogSubscriptions1 = OmsOpLogSubscriptions(opLog1);
 var omsSubscriptions1 = OmsSubscriptions(opLogSubscriptions1);
 
-omsSubscriptions1.subscribe({}, function(error, operation, arg2, arg3) {
+omsSubscriptions1.findSubscribe({}, function(error, operation, arg2, arg3) {
 	if(error)
-		console.error(error);
-	console.log(operation, arg2, arg3);
+		console.error("ERR", error);
+	console.log("OP", operation, "ARG2", arg2, arg3);
 });
 
 
