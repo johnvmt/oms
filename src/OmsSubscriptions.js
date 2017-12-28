@@ -33,7 +33,7 @@ OmsSubscriptions.prototype.findSubscribeOneObject = function() {
 OmsSubscriptions.prototype.findSubscribeOne = function() {
 	var query = (typeof arguments[0] == 'function') ? {} : arguments[0];
 	var callback = (typeof arguments[0] == 'function') ? arguments[0] : arguments[1];
-	this.findSubscribeOneObject(query, function(error, operationObject) {
+	return this.findSubscribeOneObject(query, function(error, operationObject) {
 		if(error)
 			callback(error);
 		else
@@ -81,7 +81,7 @@ OmsSubscriptions.prototype.subscribeObject = function() {
 OmsSubscriptions.prototype.findSubscribe = function() {
 	var query = (typeof arguments[0] == 'function') ? {} : arguments[0];
 	var callback = (typeof arguments[0] == 'function') ? arguments[0] : arguments[1];
-	this.findSubscribeObject(query, function(error, operationObject) {
+	return this.findSubscribeObject(query, function(error, operationObject) {
 		if(error)
 			callback(error);
 		else
@@ -97,7 +97,7 @@ OmsSubscriptions.prototype.findSubscribe = function() {
 OmsSubscriptions.prototype.subscribe = function() {
 	var query = (typeof arguments[0] == 'function') ? {} : arguments[0];
 	var callback = (typeof arguments[0] == 'function') ? arguments[0] : arguments[1];
-	this.subscribeObject(query, function(error, operationObject) {
+	return this.subscribeObject(query, function(error, operationObject) {
 		if(error)
 			callback(error);
 		else

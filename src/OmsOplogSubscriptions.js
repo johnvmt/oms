@@ -1,5 +1,6 @@
 var OmsSubscriptions = require('./OmsSubscriptions');
 var OmsUtils = require('./OmsUtils');
+var OmsSubscriptionController = require('./OmsSubscriptionController');
 
 function OmsOplogSubscriptions(opLogCollection) {
 	var self = this;
@@ -30,31 +31,38 @@ OmsOplogSubscriptions.prototype.findSubscribeOne = function(collectionQuery, opL
 	self._oneSubscriptions[subscriptionId] = {};
 	var oneSubscription = self._oneSubscriptions[subscriptionId];
 
+	var subscriptionController = OmsSubscriptionController({
+		cancel: function(callback) {
+			self.unsubscribe(subscriptionId, callback);
+		}
+	});
+
 	var operationObject = OmsUtils.operationObject('subscribe', ['subscribed', {subscriptionId: subscriptionId}]);
-	callback(null, OmsUtils.operationDoc(operationObject));
+	callbackSafe(null, OmsUtils.operationDoc(operationObject));
 
 	if(typeof collectionQuery._id == 'string') // Skip a step when _id is specified
 		subscribeDoc(collectionQuery._id);
 	else
 		subscribeWait();
 
+	return subscriptionController;
+
 	function subscribeDoc(docId) {
-		var subscriptionId = null;
 		var collectionQueryMerged = self._objectMerge(collectionQuery, {_id: docId});
 
 		self.findSubscribe(collectionQueryMerged, opLogQuery, function(error, operationDoc) {
 			if(error)
-				callback(error);
+				callbackSafe(error);
 			else if(operationDoc.operation.operation == 'subscribe') {
 				if(operationDoc.operation.status == 'subscribed')
 					oneSubscription.collectionSubscription = operationDoc.operation.options.subscriptionId;
 				else if(operationDoc.operation.status == 'find-complete' && !subscribeFindComplete) {
 					subscribeFindComplete = true;
-					callback(null, operationDoc);
+					callbackSafe(null, operationDoc);
 				}
 			}
 			else {
-				callback(null, operationDoc);
+				callbackSafe(null, operationDoc);
 
 				if(operationDoc.operation.operation == 'remove') {
 					self.unsubscribe(subscriptionId, function() {
@@ -66,17 +74,16 @@ OmsOplogSubscriptions.prototype.findSubscribeOne = function(collectionQuery, opL
 	}
 
 	function subscribeWait() {
-		var subscriptionId = null;
 		self.findSubscribe(collectionQuery, opLogQuery, function(error, operationDoc) {
 			if(error)
-				callback(error);
+				callbackSafe(error);
 			else if(operationDoc.operation.operation == 'subscribe') {
 
 				if(operationDoc.operation.status == 'subscribed')
 					oneSubscription.collectionSubscription = operationDoc.operation.options.subscriptionId;
 				else if(operationDoc.operation.status == 'find-complete' && !subscribeFindComplete) {
 					subscribeFindComplete = true;
-					callback(null, operationDoc);
+					callbackSafe(null, operationDoc);
 				}
 			}
 			else if(operationDoc.operation.operation == 'insert') {
@@ -87,8 +94,11 @@ OmsOplogSubscriptions.prototype.findSubscribeOne = function(collectionQuery, opL
 			}
 		});
 	}
-};
 
+	function callbackSafe(error, operationDoc) {
+		callback(error, operationDoc);
+	}
+};
 
 /**
  *
@@ -99,7 +109,7 @@ OmsOplogSubscriptions.prototype.findSubscribeOne = function(collectionQuery, opL
  */
 OmsOplogSubscriptions.prototype.subscribeResume = function(lastOpId, collectionQuery, opLogQuery, callback) {
 	var self = this;
-	self.opLogCollection.findOne({_id: lastOpId}, function(error, lastOp) {
+	return self.opLogCollection.findOne({_id: lastOpId}, function(error, lastOp) {
 		if(error)
 			callback(error, null);
 		if(lastOp == null)
@@ -194,13 +204,25 @@ OmsOplogSubscriptions.prototype.operationSubscriptionComputedDoc = function(opLo
  */
 OmsOplogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQuery, callback) {
 	var self = this;
-	var findComplete = false; // do not trigger subscription until find is complete
+	var uniqueId = self._uniqueId();
+	var subscriptionCanceled = false;
+	var subscriptionControllerPlaceholder = OmsSubscriptionController({
+		cancel: function(callback) {
+			if(subscriptionCanceled)
+				callback('not_found', null);
+			else {
+				subscriptionCanceled = true;
+				callback(null, true);
+			}
+		}
+	});
 
 	self.docCollection.find(collectionQuery, function(error, collectionDocs) {
 		if(error)
 			callback(error, null);
 		else {
-			self.subscribe(collectionQuery, opLogQuery, subscribeCallback);
+			var subscriptionController = self.subscribe(collectionQuery, opLogQuery, subscribeCallback);
+			subscriptionControllerPlaceholder.handlers = subscriptionController.handlers; // Override controller handlers so canceling will cancel the real subscription
 			collectionDocs.forEach(function(doc) {
 				// 'Insert' each found doc
 				var operationObject = OmsUtils.operationObject('insert', [doc]);
@@ -212,6 +234,7 @@ OmsOplogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQ
 		}
 	});
 
+	return subscriptionControllerPlaceholder;
 
 	function subscribeCallback() {
 		callback.apply(self, Array.prototype.slice.call(arguments));
@@ -225,19 +248,33 @@ OmsOplogSubscriptions.prototype.findSubscribe = function(collectionQuery, opLogQ
  * @param callback
  */
 OmsOplogSubscriptions.prototype.subscribe = function(collectionQuery, opLogQuery, callback) {
-	var collectionQueryKey = this._queryKey(this._collectionQueries, collectionQuery);
-	this._collectionQueries[collectionQueryKey].usages++;
+	var self = this;
+	var collectionQueryKey = self._queryKey(self._collectionQueries, collectionQuery);
+	self._collectionQueries[collectionQueryKey].usages++;
 
-	var opLogQueryKey = this._queryKey(this._opLogQueries, opLogQuery);
-	this._opLogQueries[opLogQueryKey].usages++;
+	var opLogQueryKey =self._queryKey(this._opLogQueries, opLogQuery);
+	self._opLogQueries[opLogQueryKey].usages++;
 
-	var subscriptionId = this._uniqueId();
+	var subscriptionId = self._uniqueId();
 	this._collectionSubscriptions[subscriptionId] = {collectionQueryKey: collectionQueryKey, opLogQueryKey: opLogQueryKey, callback: callback};
 
 	var operationObject = OmsUtils.operationObject('subscribe', ['subscribed', {subscriptionId: subscriptionId}]);
 	callback(null, OmsUtils.operationDoc(operationObject));
 
-	return subscriptionId;
+	// Return subscription controller
+	return OmsSubscriptionController({
+		cancel: function(callback) {
+			self.unsubscribe(subscriptionId, callback);
+		}
+	});
+};
+
+/**
+ *
+ * @param subscriptionId
+ */
+OmsOplogSubscriptions.prototype.subscriptionExists = function(subscriptionId) {
+	return (typeof this._oneSubscriptions[subscriptionId] == 'object' || typeof this._collectionSubscriptions[subscriptionId] == 'object');
 };
 
 /**
@@ -283,7 +320,6 @@ OmsOplogSubscriptions.prototype.unsubscribe = function(subscriptionId, callback)
 	else {
 		callbackSafe('subscription_not_found', null);
 	}
-
 
 	function callbackSafe(error, response) {
 		if(typeof callback == 'function')
